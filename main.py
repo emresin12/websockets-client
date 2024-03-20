@@ -4,6 +4,9 @@ import time
 
 import websockets
 
+
+latencies = []
+n_conn = 500
 async def listen_to_server(i):
     await asyncio.sleep(0)
     uri = "ws://localhost:8765"
@@ -35,10 +38,16 @@ async def latency_test():
             await websocket.recv()
             end_time = time.time()
             latency = (end_time - start_time) * 1000  # in milliseconds
+            latencies.append(latency)
 
 
 async def receive_data():
-    # await asyncio.gather(*(listen_to_server(i) for i in range(10)))
-    await asyncio.gather(*(latency_test() for i in range(10)))
+    await asyncio.gather(*(listen_to_server(i) for i in range(n_conn)))
+
+async def conduct_latency_test():
+    await asyncio.gather(*(latency_test() for i in range(n_conn)))
+    print(f"Average latency: {sum(latencies) / len(latencies)} ms")
+    print(f"Max latency: {max(latencies)} ms")
+    print(f"Min latency: {min(latencies)} ms")
 
 asyncio.get_event_loop().run_until_complete(receive_data())
